@@ -11,3 +11,15 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+.directory {
+  list-style-type: disc; /* Bullet point for directories */
+  cursor: pointer;
+}
+
+.directory:hover {
+  color: #00FF7F; /* Clover green */
+}
+
+.file {
+  list-style-type: none; /* No bullet point for files */
+}

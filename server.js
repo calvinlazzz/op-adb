@@ -1,4 +1,3 @@
-// filepath: /path/to/server.js
 const express = require('express');
 const bodyParser = require('body-parser');
 const { exec } = require('child_process');
@@ -9,10 +8,14 @@ app.use(bodyParser.json());
 app.use(cors()); // Use the cors middleware
 
 app.post('/execute-adb', (req, res) => {
-    const { command } = req.body;
-    exec(`adb ${command}`, (error, stdout, stderr) => {
+    const { command, path } = req.body;
+    const adbCommand = path ? `adb shell ls -l ${path}` : `adb ${command}`;
+    exec(adbCommand, (error, stdout, stderr) => {
         if (error) {
-            return res.status(500).json({ error: stderr });
+            console.error(`Error executing command: ${adbCommand}`);
+            console.error(`stderr: ${stderr}`);
+            console.error(`stdout: ${stdout}`);
+            return res.status(500).json({ error: `Failed to execute command: ${stderr.trim()}` });
         }
         res.json({ output: stdout });
     });
@@ -21,4 +24,4 @@ app.post('/execute-adb', (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
- });
+});

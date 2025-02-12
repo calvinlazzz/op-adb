@@ -1,25 +1,66 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import './index.css'; // Import the CSS file
 
 const AdbCommand = () => {
     const [command, setCommand] = useState('');
     const [output, setOutput] = useState('');
+    const [currentPath, setCurrentPath] = useState('');
+    const [error, setError] = useState('');
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         executeCommand(command);
     };
 
-    const executeCommand = async (cmd) => {
+    const executeCommand = async (cmd, path = '') => {
         try {
-            if (cmd === 'reboot') {
-                setOutput('Device rebooted');
-            }
-            const response = await axios.post('http://localhost:3000/execute-adb', { command: cmd });
+            const response = await axios.post('http://localhost:3000/execute-adb', { command: cmd, path });
             setOutput(response.data.output);
+            setError(''); // Clear any previous errors
         } catch (error) {
-            setOutput(error.response.data.error);
+            setError(error.response ? error.response.data.error : 'An unknown error occurred');
         }
+    };
+
+    const handleDirectoryClick = (dir, targetPath) => {
+        const newPath = targetPath || (currentPath ? `${currentPath}/${dir}` : dir);
+        setCurrentPath(newPath);
+        console.log('New path:', newPath);
+        executeCommand('shell ls -l', newPath);
+    };
+
+    const handleBackClick = () => {
+        const newPath = currentPath.split('/').slice(0, -1).join('/');
+        setCurrentPath(newPath);
+        executeCommand('shell ls -l', newPath);
+    };
+
+    const handleShellListClick = () => {
+        setCurrentPath(''); // Clear the current path
+        executeCommand('shell ls -l');
+    };
+
+    const renderOutput = () => {
+        if (!output) return null;
+        const items = output.split('\n').filter(item => item);
+        return (
+            <ul>
+                {items.map((item, index) => {
+                    const isDirectory = item.startsWith('d');
+                    const isLink = item.startsWith('l');
+                    const parts = item.split(' ');
+                    const itemName = parts.pop();
+                    const targetPath = isLink && item.split('->')[1] ? item.split('->')[1].trim() : null;
+                    const displayName = isLink ? item.split('->')[0].trim().split(' ').pop() : itemName;
+                    return (
+                        <li key={index} className={isDirectory || isLink ? 'directory' : 'file'} onClick={isDirectory || isLink ? () => handleDirectoryClick(displayName, targetPath) : null} style={{ cursor: isDirectory || isLink ? 'pointer' : 'default' }}>
+                            {displayName}
+                        </li>
+                    );
+                })}
+            </ul>
+        );
     };
 
     return (
@@ -36,10 +77,12 @@ const AdbCommand = () => {
             <div>
                 <button onClick={() => executeCommand('reboot')}>Reboot</button>
                 <button onClick={() => executeCommand('devices')}>Devices</button>
-                <button onClick={() => executeCommand('shell ls')}>Shell List</button>
+                <button onClick={handleShellListClick}>Shell List</button>
+                <button onClick={handleBackClick}>Back</button>
                 {/* Add more buttons for other common commands as needed */}
             </div>
-            <pre>{output}</pre>
+            {error && <div className="error">{error}</div>}
+            <pre>{renderOutput()}</pre>
         </div>
     );
 };
