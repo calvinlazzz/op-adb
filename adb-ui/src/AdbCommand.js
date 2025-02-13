@@ -12,6 +12,10 @@ const AdbCommand = () => {
         e.preventDefault();
         executeCommand(command);
     };
+    const handleExecute = async (e) => {
+        e.preventDefault();
+        executeCommand1(command);
+    }
 
     const executeCommand = async (cmd, path = '') => {
         try {
@@ -22,6 +26,15 @@ const AdbCommand = () => {
             setError(error.response ? error.response.data.error : 'An unknown error occurred');
         }
     };
+    const executeCommand1 = async (cmd) => {
+        try {
+            const response = await axios.post('http://localhost:3000/execute', { command: cmd });
+            setOutput(response.data.output);
+            setError(''); // Clear any previous errors
+        } catch (error) {
+            setError(error.response ? error.response.data.error : 'An unknown error occurred');
+        }
+    }
 
     const handleDirectoryClick = (dir, targetPath) => {
         const newPath = targetPath || (currentPath ? `${currentPath}/${dir}` : dir);
@@ -72,10 +85,15 @@ const AdbCommand = () => {
                     onChange={(e) => setCommand(e.target.value)}
                     placeholder="Enter ADB command"
                 />
-                <button type="submit">Execute</button>
+                <button type="submit">ADB Execute</button>
+                <button onClick={handleExecute}>Normal Execute</button>
+
             </form>
+
             <div>
                 <button onClick={() => executeCommand('reboot')}>Reboot</button>
+                <button onClick={() => executeCommand('shell su 1000 content call --uri content://com.clover.service.provider --method masterClear')}>Factory Reboot</button>
+                <button onClick={() => executeCommand('shell setprop "persist.sys.ota.disable" 1')}>Turn off OTA updater</button>
                 <button onClick={() => executeCommand('devices')}>Devices</button>
                 <button onClick={handleShellListClick}>Shell List</button>
                 <button onClick={handleBackClick}>Back</button>

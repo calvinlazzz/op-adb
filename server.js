@@ -20,6 +20,18 @@ app.post('/execute-adb', (req, res) => {
         res.json({ output: stdout });
     });
 });
+app.post('/execute', (req, res) => {
+    const { command } = req.body;
+    exec(command, (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Error executing command: ${command}`);
+            console.error(`stderr: ${stderr}`);
+            console.error(`stdout: ${stdout}`);
+            return res.status(500).json({ error: `Failed to execute command: ${stderr.trim()}` });
+        }
+        res.json({ output: stdout });
+    });
+})
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
