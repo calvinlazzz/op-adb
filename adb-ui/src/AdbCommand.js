@@ -7,6 +7,8 @@ const AdbCommand = () => {
     const [output, setOutput] = useState('');
     const [currentPath, setCurrentPath] = useState('');
     const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
+    const [selectedFolder, setSelectedFolder] = useState('');
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -23,8 +25,10 @@ const AdbCommand = () => {
             const response = await axios.post('http://localhost:3000/execute-adb', { command: cmd, path });
             setOutput(response.data.output);
             setError(''); // Clear any previous errors
+            setSuccess('Command executed successfully'); // Set success message
         } catch (error) {
             setError(error.response ? error.response.data.error : 'An unknown error occurred');
+            setSuccess(''); // Clear any previous success message
         }
     };
 
@@ -33,8 +37,10 @@ const AdbCommand = () => {
             const response = await axios.post('http://localhost:3000/execute', { command: cmd });
             setOutput(response.data.output);
             setError(''); // Clear any previous errors
+            setSuccess('Command executed successfully'); // Set success message
         } catch (error) {
             setError(error.response ? error.response.data.error : 'An unknown error occurred');
+            setSuccess(''); // Clear any previous success message
         }
     };
 
@@ -60,6 +66,32 @@ const AdbCommand = () => {
         const confirmed = window.confirm('Are you sure you want to Factory reset the device?');
         if (confirmed) {
             executeCommand('shell su 1000 content call --uri content://com.clover.service.provider --method masterClear');
+        }
+    };
+
+    const handlePullLogsClick = () => {
+        const logFileName = window.prompt('Enter the log file name:', 'adblogs');
+        if (logFileName && selectedFolder) {
+            const localPath = `${selectedFolder}/${logFileName}`;
+            // Ensure the directory exists
+            const fs = window.require('fs');
+            const path = window.require('path');
+            const dir = path.dirname(localPath);
+            if (!fs.existsSync(dir)) {
+                fs.mkdirSync(dir, { recursive: true });
+            }
+            executeCommand(`pull /data/log ${localPath}`);
+        }
+    };
+
+    const handleFolderSelect = (event) => {
+        const files = event.target.files;
+        if (files.length > 0) {
+            const folderPath = files[0].path;
+            setSelectedFolder(folderPath);
+            console.log('Selected folder:', folderPath);
+        } else {
+            console.log('No folder selected');
         }
     };
 
@@ -105,9 +137,21 @@ const AdbCommand = () => {
                 <button onClick={() => executeCommand('devices')}>Devices</button>
                 <button onClick={handleShellListClick}>Shell List</button>
                 <button onClick={handleBackClick}>Back</button>
+                <input
+                    type="file"
+                    webkitdirectory="true"
+                    directory="true"
+                    onChange={handleFolderSelect}
+                    id="folderInput"
+                />
+                <label htmlFor="folderInput">
+                    <button>Select Folder</button>
+                </label>
+                <button onClick={handlePullLogsClick}>Pull Logs</button>
                 {/* Add more buttons for other common commands as needed */}
             </div>
             {error && <div className="error">{error}</div>}
+            {success && <div className="success">{success}</div>}
             <pre>{renderOutput()}</pre>
         </div>
     );
