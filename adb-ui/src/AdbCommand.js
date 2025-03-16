@@ -137,7 +137,7 @@ const AdbCommand = () => {
                 <button onClick={() => executeCommand('devices')}>Devices</button>
                 <button onClick={handleShellListClick}>Shell List</button>
                 <button onClick={handleBackClick}>Back</button>
-                <input
+                {/* <input
                     type="file"
                     webkitdirectory="true"
                     directory="true"
@@ -147,7 +147,7 @@ const AdbCommand = () => {
                 <label htmlFor="folderInput">
                     <button>Select Folder</button>
                 </label>
-                <button onClick={handlePullLogsClick}>Pull Logs</button>
+                <button onClick={handlePullLogsClick}>Pull Logs</button> */}
                 {/* Add more buttons for other common commands as needed */}
             </div>
             {error && <div className="error">{error}</div>}
