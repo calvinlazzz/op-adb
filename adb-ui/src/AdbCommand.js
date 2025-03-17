@@ -118,41 +118,48 @@ const AdbCommand = () => {
     };
 
     return (
-        <div>
-            <form onSubmit={handleSubmit}>
-                <input
-                    type="text"
-                    value={command}
-                    onChange={(e) => setCommand(e.target.value)}
-                    placeholder="Enter ADB command"
-                />
-                <button type="submit">ADB Execute</button>
-                <button onClick={handleExecute}>Normal Execute</button>
-            </form>
-
-            <div>
-                <button onClick={() => executeCommand('reboot')}>Reboot</button>
-                <button onClick={handleFactoryRebootClick}>Factory Reboot</button>
-                <button onClick={() => executeCommand('shell setprop "persist.sys.ota.disable" 1')}>Turn off OTA updater</button>
-                <button onClick={() => executeCommand('devices')}>Devices</button>
-                <button onClick={handleShellListClick}>Shell List</button>
-                <button onClick={handleBackClick}>Back</button>
-                {/* <input
-                    type="file"
-                    webkitdirectory="true"
-                    directory="true"
-                    onChange={handleFolderSelect}
-                    id="folderInput"
-                />
-                <label htmlFor="folderInput">
-                    <button>Select Folder</button>
-                </label>
-                <button onClick={handlePullLogsClick}>Pull Logs</button> */}
-                {/* Add more buttons for other common commands as needed */}
+        <div className="container">
+            <div className="bordered-container">
+                <div className="appHeader">
+                </div>
+                <div className="inputBox">
+                    <form onSubmit={handleSubmit}>
+                        <input
+                            type="text"
+                            value={command}
+                            onChange={(e) => setCommand(e.target.value)}
+                            placeholder="Enter ADB command"
+                        />
+                        <button type="submit" className="button">ADB Execute</button>
+                        <button onClick={handleExecute} className="button">Normal Execute</button>
+                    </form>
+                </div>
+                <div className="buttons">
+                    <button onClick={() => executeCommand('reboot')} className="button">Reboot</button>
+                    <button onClick={handleFactoryRebootClick} className="button">Factory Reboot</button>
+                    <button onClick={() => executeCommand('shell setprop "persist.sys.ota.disable" 1')} className="button">Turn off OTA updater</button>
+                    <button onClick={() => executeCommand('devices')} className="button">Devices</button>
+                    <button onClick={handleShellListClick} className="button">Shell List</button>
+                    <button onClick={handleBackClick} className="button">Back</button>
+                    {/* <input
+                        type="file"
+                        webkitdirectory="true"
+                        directory="true"
+                        onChange={handleFolderSelect}
+                        id="folderInput"
+                    />
+                    <label htmlFor="folderInput">
+                        <button className="button">Select Folder</button>
+                    </label>
+                    <button onClick={handlePullLogsClick} className="button">Pull Logs</button> */}
+                    {/* Add more buttons for other common commands as needed */}
+                </div>
+                <div className="output">
+                    {error && <div className="error">{error}</div>}
+                    {success && <div className="success">{success}</div>}
+                    <pre>{renderOutput()}</pre>
+                </div>
             </div>
-            {error && <div className="error">{error}</div>}
-            {success && <div className="success">{success}</div>}
-            <pre>{renderOutput()}</pre>
         </div>
     );
 };

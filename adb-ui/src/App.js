@@ -6,7 +6,7 @@ import './App.css';
 const App = () => {
     return (
         <div>
-            <h1>ADB Command Executor</h1>
+            <h1 className='appHeader'>ADB Command Executor</h1>
             <AdbCommand />
         </div>
     );
