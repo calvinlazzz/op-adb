@@ -14,8 +14,7 @@
     "web-vitals": "^4.2.4"
   },
   "scripts": {
-    "start": "HOST=0.0.0.0 PORT=3001 BROWSER='open -a \"Google Chrome\" --args --app=http://localhost:3001' react-scripts start",
-    "build": "react-scripts build",
+  "start": "HOST=localhost PORT=3001 BROWSER='open -a \"Google Chrome\" --args --app=http://localhost:3001' react-scripts start",    "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "start:server": "cd .. && node server.js",

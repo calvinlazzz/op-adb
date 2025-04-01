@@ -13,7 +13,7 @@ const AdbCommand = () => {
     const [editingCommand, setEditingCommand] = useState(null); // Command being edited
     const [newName, setNewName] = useState(''); // New name for the command
     const [newCommand, setNewCommand] = useState(''); // New command text
-
+    const [isShellList, setIsShellList] = useState(false); // Tracks if the output is from a Shell List
     useEffect(() => {
         // Fetch saved commands on component mount
         fetchSavedCommands();
@@ -21,7 +21,7 @@ const AdbCommand = () => {
 
     const fetchSavedCommands = async () => {
         try {
-            const response = await axios.get('http://10.0.1.29:3000/commands');
+            const response = await axios.get('http://localhost:3000/commands');
             setSavedCommands(response.data);
         } catch (error) {
             console.error('Error fetching saved commands:', error);
@@ -37,7 +37,7 @@ const AdbCommand = () => {
     const saveEditedCommand = async (e) => {
         e.preventDefault(); // Prevent any default form submission behavior
         try {
-            const response = await axios.put(`http://10.0.1.29:3000/edit-command/${editingCommand.id}`, {
+            const response = await axios.put(`http://localhost:3000/edit-command/${editingCommand.id}`, {
                 name: newName,
                 command: newCommand,
             });
@@ -55,7 +55,7 @@ const AdbCommand = () => {
     };
     const handleDeleteCommand = async (id) => {
         try {
-            await axios.delete(`http://10.0.1.29:3000/delete-command/${id}`);
+            await axios.delete(`http://localhost:3000/delete-command/${id}`);
             setSavedCommands(savedCommands.filter(cmd => cmd.id !== id));
         } catch (error) {
             console.error('Error deleting command:', error);
@@ -74,7 +74,8 @@ const AdbCommand = () => {
     const executeCommand = async (cmd, path = '') => {
         try {
             const fullCommand = path ? `${cmd} ${path}` : cmd; // Append the path if provided
-            const response = await axios.post('http://10.0.1.29:3000/execute-adb', { command: fullCommand });
+            setIsShellList(cmd.startsWith('shell ls -l')); // Check if it's a Shell List command
+            const response = await axios.post('http://localhost:3000/execute-adb', { command: fullCommand });
             setOutput(response.data.output);
             setError('');
             setSuccess('Command executed successfully');
@@ -88,7 +89,7 @@ const AdbCommand = () => {
         e.preventDefault(); // Prevent form submission
         if (!command.trim()) return;
         try {
-            const response = await axios.post('http://10.0.1.29:3000/save-command', { command });
+            const response = await axios.post('http://localhost:3000/save-command', { command });
             setSavedCommands([response.data, ...savedCommands]); // Add the new command to the list
             setCommand(''); // Clear the input field
             setSuccess('Command saved successfully'); // Show success message
@@ -101,7 +102,7 @@ const AdbCommand = () => {
     };
     const executeCommand1 = async (cmd) => {
         try {
-            const response = await axios.post('http://10.0.1.29:3000/execute', { command: cmd });
+            const response = await axios.post('http://localhost:3000/execute', { command: cmd });
             setOutput(response.data.output);
             setError(''); // Clear any previous errors
             setSuccess('Command executed successfully'); // Set success message
@@ -167,24 +168,40 @@ const AdbCommand = () => {
 
     const renderOutput = () => {
         if (!output) return null;
-        const items = output.split('\n').filter(item => item);
-        return (
-            <ul>
-                {items.map((item, index) => {
-                    const isDirectory = item.startsWith('d');
-                    const isLink = item.startsWith('l');
-                    const parts = item.split(' ');
-                    const itemName = parts.pop();
-                    const targetPath = isLink && item.split('->')[1] ? item.split('->')[1].trim() : null;
-                    const displayName = isLink ? item.split('->')[0].trim().split(' ').pop() : itemName;
-                    return (
-                        <li key={index} className={isDirectory || isLink ? 'directory' : 'file'} onClick={isDirectory || isLink ? () => handleDirectoryClick(displayName, targetPath) : null} style={{ cursor: isDirectory || isLink ? 'pointer' : 'default' }}>
-                            {displayName}
-                        </li>
-                    );
-                })}
-            </ul>
-        );
+    
+        if (isShellList) {
+            // Render Shell List output
+            const items = output.split('\n').filter(item => item);
+            return (
+                <ul>
+                    {items.map((item, index) => {
+                        const isDirectory = item.startsWith('d');
+                        const isLink = item.startsWith('l');
+                        const parts = item.split(' ');
+                        const itemName = parts.pop();
+                        const targetPath = isLink && item.split('->')[1] ? item.split('->')[1].trim() : null;
+                        const displayName = isLink ? item.split('->')[0].trim().split(' ').pop() : itemName;
+                        return (
+                            <li
+                                key={index}
+                                className={isDirectory || isLink ? 'directory' : 'file'}
+                                onClick={isDirectory || isLink ? () => handleDirectoryClick(displayName, targetPath) : null}
+                                style={{ cursor: isDirectory || isLink ? 'pointer' : 'default' }}
+                            >
+                                {displayName}
+                            </li>
+                        );
+                    })}
+                </ul>
+            );
+        } else {
+            // Render raw output for other commands
+            return (
+                <pre style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>
+                    {output}
+                </pre>
+            );
+        }
     };
 
     return (
