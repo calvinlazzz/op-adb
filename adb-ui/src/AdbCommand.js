@@ -34,7 +34,8 @@ const AdbCommand = () => {
         setNewCommand(cmd.command);
     };
     
-    const saveEditedCommand = async () => {
+    const saveEditedCommand = async (e) => {
+        e.preventDefault(); // Prevent any default form submission behavior
         try {
             const response = await axios.put(`http://10.0.1.29:3000/edit-command/${editingCommand.id}`, {
                 name: newName,
@@ -44,9 +45,12 @@ const AdbCommand = () => {
             setEditingCommand(null);
             setNewName('');
             setNewCommand('');
+            setSuccess('Command edited successfully'); // Show success message
+            setError(''); // Clear any previous errors
         } catch (error) {
             console.error('Error editing command:', error);
-            setError('Failed to edit command');
+            setError('Failed to edit command'); // Show error message
+            setSuccess(''); // Clear any previous success message
         }
     };
     const handleDeleteCommand = async (id) => {
@@ -67,9 +71,10 @@ const AdbCommand = () => {
         e.preventDefault();
         executeCommand1(command);
     };
-    const executeCommand = async (cmd) => {
+    const executeCommand = async (cmd, path = '') => {
         try {
-            const response = await axios.post('http://10.0.1.29:3000/execute-adb', { command: cmd });
+            const fullCommand = path ? `${cmd} ${path}` : cmd; // Append the path if provided
+            const response = await axios.post('http://10.0.1.29:3000/execute-adb', { command: fullCommand });
             setOutput(response.data.output);
             setError('');
             setSuccess('Command executed successfully');
@@ -106,22 +111,23 @@ const AdbCommand = () => {
         }
     };
 
+    //Quick buttons
     const handleDirectoryClick = (dir, targetPath) => {
         const newPath = targetPath || (currentPath ? `${currentPath}/${dir}` : dir);
         setCurrentPath(newPath);
         console.log('New path:', newPath);
-        executeCommand('shell ls -l', newPath);
+        executeCommand('shell ls -l', newPath); // Pass the path to the command
     };
 
     const handleBackClick = () => {
         const newPath = currentPath.split('/').slice(0, -1).join('/');
         setCurrentPath(newPath);
-        executeCommand('shell ls -l', newPath);
+        executeCommand('shell ls -l', newPath); // Pass the path to the command
     };
 
     const handleShellListClick = () => {
         setCurrentPath(''); // Clear the current path
-        executeCommand('shell ls -l');
+        executeCommand('shell ls -l'); // No path needed
     };
 
     const handleFactoryRebootClick = () => {
@@ -182,77 +188,84 @@ const AdbCommand = () => {
     };
 
     return (
-        <div className="container">
-            <div className="bordered-container">
-                <div className="appHeader">
+        <div className="container mt-4">
+            <div className="border p-4 rounded shadow">
+                <div className="text-center mb-4">
+                    <h2>ADB Command Executor</h2>
                 </div>
-                <div className="inputBox">
-                    <form onSubmit={handleSubmit}>
-                        <input
-                            type="text"
-                            value={command}
-                            onChange={(e) => setCommand(e.target.value)}
-                            placeholder="Enter ADB command"
-                        />
-                        <button type="submit" className="button">ADB Execute</button>
-                        <button onClick={handleExecute} className="button">Normal Execute</button>
-                        <button onClick={(e) => saveCommand(e)} className="button">Save Command</button>
+                <div className="mb-4">
+                    <form onSubmit={handleSubmit} className="d-flex flex-column align-items-center">
+                        <div className="input-group mb-3">
+                            <input
+                                type="text"
+                                className="form-control"
+                                value={command}
+                                onChange={(e) => setCommand(e.target.value)}
+                                placeholder="Enter ADB command"
+                            />
+                            <button type="submit" className="btn btn-primary">ADB Execute</button>
+                        </div>
+                        <div className="d-flex gap-2">
+                            <button onClick={handleExecute} className="btn btn-secondary">Normal Execute</button>
+                            <button onClick={(e) => saveCommand(e)} className="btn btn-success">Save Command</button>
+                        </div>
                     </form>
                 </div>
-                <div className="buttons">
-                    <button onClick={() => executeCommand('reboot')} className="button">Reboot</button>
-                    <button onClick={handleFactoryRebootClick} className="button">Factory Reboot</button>
-                    <button onClick={() => executeCommand('shell setprop "persist.sys.ota.disable" 1')} className="button">Turn off OTA updater</button>
-                    <button onClick={() => executeCommand('devices')} className="button">Devices</button>
-                    <button onClick={handleShellListClick} className="button">Shell List</button>
-                    <button onClick={handleBackClick} className="button">Back</button>
-                    {/* <input
-                        type="file"
-                        webkitdirectory="true"
-                        directory="true"
-                        onChange={handleFolderSelect}
-                        id="folderInput"
-                    />
-                    <label htmlFor="folderInput">
-                        <button className="button">Select Folder</button>
-                    </label>
-                    <button onClick={handlePullLogsClick} className="button">Pull Logs</button> */}
-                    {/* Add more buttons for other common commands as needed */}
+                <div className="mb-4">
+                    <h4>Quick Actions</h4>
+                    <div className="d-flex flex-wrap gap-2">
+                        <button onClick={() => executeCommand('reboot')} className="btn btn-warning">Reboot</button>
+                        <button onClick={handleFactoryRebootClick} className="btn btn-danger">Factory Reboot</button>
+                        <button onClick={() => executeCommand('shell setprop "persist.sys.ota.disable" 1')} className="btn btn-info">Turn off OTA updater</button>
+                        <button onClick={() => executeCommand('devices')} className="btn btn-dark">Devices</button>
+                        <button onClick={handleShellListClick} className="btn btn-light">Shell List</button>
+                        <button onClick={handleBackClick} className="btn btn-outline-secondary">Back</button>
+                    </div>
                 </div>
-                <div className="savedCommands">
-                <h3>Saved Commands</h3>
-                    {savedCommands.map((cmd) => (
-                        <div key={cmd.id} className="savedCommand">
-                            <button onClick={() => executeCommand(cmd.command)} className="button">
-                                {cmd.name || cmd.command}
-                            </button>
-                            <button onClick={() => handleEditCommand(cmd)} className="button editButton">Edit</button>
-                            <button onClick={() => handleDeleteCommand(cmd.id)} className="button deleteButton">Delete</button>
-                        </div>
-                    ))}
+                <div className="mb-4">
+                    <h4>Saved Commands</h4>
+                    <div className="list-group">
+                        {savedCommands.map((cmd) => (
+                            <div key={cmd.id} className="list-group-item d-flex justify-content-between align-items-center">
+                                <button onClick={() => executeCommand(cmd.command)} className="btn btn-link">
+                                    {cmd.name || cmd.command}
+                                </button>
+                                <div>
+                                    <button onClick={() => handleEditCommand(cmd)} className="btn btn-sm btn-outline-primary me-2">Edit</button>
+                                    <button onClick={() => handleDeleteCommand(cmd.id)} className="btn btn-sm btn-outline-danger">Delete</button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                     {editingCommand && (
-                        <div className="editCommand">
-                            <h4>Edit Command</h4>
-                            <input
-                                type="text"
-                                value={newName || ''}
-                                onChange={(e) => setNewName(e.target.value)}
-                                placeholder="Enter button name"
-                            />
-                            <input
-                                type="text"
-                                value={newCommand || ''}
-                                onChange={(e) => setNewCommand(e.target.value)}
-                                placeholder="Enter command"
-                            />
-                            <button onClick={saveEditedCommand} className="button saveButton">Save</button>
-                            <button onClick={() => setEditingCommand(null)} className="button cancelButton">Cancel</button>
+                        <div className="mt-3">
+                            <h5>Edit Command</h5>
+                            <div className="mb-2">
+                                <input
+                                    type="text"
+                                    className="form-control mb-2"
+                                    value={newName || ''}
+                                    onChange={(e) => setNewName(e.target.value)}
+                                    placeholder="Enter button name"
+                                />
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    value={newCommand || ''}
+                                    onChange={(e) => setNewCommand(e.target.value)}
+                                    placeholder="Enter command"
+                                />
+                            </div>
+                            <div className="d-flex gap-2">
+                                <button onClick={(e) => saveEditedCommand(e)} className="btn btn-success">Save</button>
+                                <button onClick={() => setEditingCommand(null)} className="btn btn-secondary">Cancel</button>
+                            </div>
                         </div>
                     )}
                 </div>
                 <div className="output">
-                    {error && <div className="error">{error}</div>}
-                    {success && <div className="success">{success}</div>}
+                    {error && <div className="alert alert-danger">{error}</div>}
+                    {success && <div className="alert alert-success">{success}</div>}
                     <pre>{renderOutput()}</pre>
                 </div>
             </div>
