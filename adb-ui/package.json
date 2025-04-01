@@ -10,10 +10,11 @@
     "react-dom": "^19.0.0",
     "react-file-picker": "^0.0.6",
     "react-scripts": "5.0.1",
+    "sqlite3": "^5.1.7",
     "web-vitals": "^4.2.4"
   },
   "scripts": {
-"start": "CI=true BROWSER='open -a \"Google Chrome\" --args --app=http://localhost:3001' PORT=3001 react-scripts start",
+    "start": "HOST=0.0.0.0 PORT=3001 BROWSER='open -a \"Google Chrome\" --args --app=http://localhost:3001' react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
