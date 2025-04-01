@@ -14,13 +14,13 @@
     "web-vitals": "^4.2.4"
   },
   "scripts": {
-  "start": "HOST=localhost PORT=3001 BROWSER='open -a \"Google Chrome\" --args --app=http://localhost:3001' react-scripts start",    "build": "react-scripts build",
+    "start": "HOST=localhost PORT=3001 BROWSER='open -a \"Google Chrome\" --args --app=http://localhost:3001' react-scripts start",
+    "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "start:server": "cd .. && node server.js",
-    "start:build": "npm run build",
     "start:client": "npm run start",
-    "dev": "run-p start:server start:build start:client"
+    "dev": "run-p start:server start:client"
   },
   "eslintConfig": {
     "extends": [
@@ -42,5 +42,6 @@
   },
   "devDependencies": {
     "npm-run-all": "^4.1.5"
-  }
+  },
+  "postinstall": "npm install"
 }
